@@ -1,0 +1,22 @@
+<mat-nav-list>
+  <a *ngIf="!isAuth" mat-list-item routerLink="/signup" (click)="onCloseSidenav()">
+    <mat-icon>face</mat-icon>
+    <span class="nav-caption">Signup</span>
+  </a>
+  <a *ngIf="!isAuth" mat-list-item routerLink="/login" (click)="onCloseSidenav()">
+    <mat-icon>login</mat-icon>
+    <span class="nav-caption">Login</span>
+  </a>
+  <a *ngIf="isAuth" mat-list-item routerLink="/training" (click)="onCloseSidenav()">
+    <mat-icon>fitness_center</mat-icon>
+    <span class="nav-caption">Training</span>
+  </a>
+  <!-- we cannot apply mat-list-item attribute selector to button,
+  hence we need to encapsuate into the <mat-list-item> element selector. -->
+  <mat-list-item *ngIf="isAuth" >
+    <button mat-icon-button (click)="onLogout()">
+      <mat-icon>eject</mat-icon>
+      <span class="nav-caption">Logout</span>
+    </button>
+  </mat-list-item>
+</mat-nav-list>

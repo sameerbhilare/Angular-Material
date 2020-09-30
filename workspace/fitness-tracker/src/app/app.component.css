@@ -1,0 +1,9 @@
+mat-sidenav-container,
+mat-sidenav,
+mat-sidenav-content {
+  height: 100%; /* so that these elements will take 100% height even if the ocntent inside it doesn't require it */
+}
+
+mat-sidenav {
+  width: 250px; /* by default it takes only required width to accomodate the content. */
+}

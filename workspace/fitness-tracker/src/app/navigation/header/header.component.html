@@ -1,0 +1,20 @@
+<mat-toolbar color="primary">
+  <div fxHide.gt-xs> <!-- hide menu icon for screens greater than xs (600px)-->
+    <button mat-icon-button (click)="onToggleSidenav()">
+      <mat-icon>menu</mat-icon>
+    </button>
+  </div>
+  <div>
+    <a routerLink="/">LOGO</a>
+  </div>
+  <div fxFlex fxLayout fxLayoutAlign="end">
+    <ul fxLayout fxLayoutGap="20px"
+        fxHide.xs
+        class="navigation-items"> <!-- hide toolbar navi for xs screens only (600px) -->
+      <li *ngIf="!isAuth"><a routerLink="/signup">Signup</a></li>
+      <li *ngIf="!isAuth"><a routerLink="/login">Login</a></li>
+      <li *ngIf="isAuth"><a routerLink="/training">Training</a></li>
+      <li *ngIf="isAuth"><a (click)="onLogout()">Logout</a></li>
+    </ul>
+  </div>
+</mat-toolbar>
