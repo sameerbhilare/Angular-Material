@@ -3,6 +3,9 @@ import { BrowserAnimationsModule } from "@angular/platform-browser/animations";
 import { NgModule } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { FlexLayoutModule } from '@angular/flex-layout';
+import { AngularFireModule } from "@angular/fire";
+import { AngularFirestoreModule } from "@angular/fire/firestore";
+import { AngularFireAuthModule } from "@angular/fire/auth";
 
 import { AppComponent } from './app.component';
 import { MaterialModule } from "./material.module";
@@ -19,6 +22,8 @@ import { SidenavListComponent } from './navigation/sidenav-list/sidenav-list.com
 import { StopTrainingComponent } from './training/current-training/stop-training.component';
 import { AuthService } from './auth/auth.service';
 import { TrainingService } from './training/training.service';
+import { environment } from '../environments/environment';
+
 
 @NgModule({
   declarations: [
@@ -40,7 +45,14 @@ import { TrainingService } from './training/training.service';
     MaterialModule,
     AppRoutingModule,
     FlexLayoutModule,
-    FormsModule
+    FormsModule,
+
+    // initialize Angular Fire with our firebase data - General setup
+    AngularFireModule.initializeApp(environment.firebaseConfig),
+    // enable Firestore related functionalities
+    AngularFirestoreModule,
+    // enable Firebase Authentication services
+    AngularFireAuthModule
   ],
   providers: [ AuthService, TrainingService ],
   bootstrap: [AppComponent],

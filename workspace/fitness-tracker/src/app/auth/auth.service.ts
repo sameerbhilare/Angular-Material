@@ -1,49 +1,80 @@
 import { Injectable } from '@angular/core';
+import { AngularFireAuth } from '@angular/fire/auth';
 import { Router } from '@angular/router';
 import { Subject } from 'rxjs';
+import { TrainingService } from '../training/training.service';
 import { AuthData } from './auth-data.model';
 import { User } from './user.model';
 
 @Injectable()
 export class AuthService {
 
-  private user: User;
+  isAuthenticated: boolean = false;
   authChange = new Subject<boolean>();
 
-  constructor(private router: Router) {}
+  constructor(private router: Router,
+              private firebaseAuth: AngularFireAuth,
+              private trainingService: TrainingService) {}
 
-  registerUser(authaData: AuthData) {
-    this.user = {
-      email: authaData.email,
-      userId: Math.round(Math.random() * 1000).toString()
-    }
-    this.authSuccessful();
+  /**
+   * This function must be called as soon as our app starts. So basically from AppComponent
+   */
+  initializeAuthListener() {
+    // we can subscribe to the firestore authState Observable
+    // in orde to get notified about authenticated vs unauthenticated states.
+    this.firebaseAuth.authState.subscribe(user => {
+      if (user) {
+        // user authenticated
+        this.isAuthenticated = true;
+        this.authChange.next(true);
+        this.router.navigate(['/training']);
+      } else {
+        // user not authenticated
+        // cancel all firestore subscriptions to handle the console errors.
+        this.trainingService.cancelFirestoreSubscriptions();
+        this.authChange.next(false);
+        this.router.navigate(['/login']);
+        this.isAuthenticated = false;
+      }
+    });
   }
 
-  login(authaData: AuthData) {
-    this.user = {
-      email: authaData.email,
-      userId: Math.round(Math.random() * 1000).toString()
-    }
-    this.authSuccessful();
+  /**
+   * Signup a user
+   * @param authData
+   */
+  registerUser(authData: AuthData) {
+
+    this.firebaseAuth
+      .createUserWithEmailAndPassword(authData.email, authData.password)
+      .then((result) => {
+        console.log(result);
+      })
+      .catch((error) => console.log(error));
   }
 
+  /**
+   * Login a user
+   * @param authData
+   */
+  login(authData: AuthData) {
+    this.firebaseAuth
+    .signInWithEmailAndPassword(authData.email, authData.password)
+    .then((result) => {
+      console.log(result);
+    })
+    .catch((error) => console.log(error));
+  }
+
+  /**
+   * Logout current user
+   */
   logout() {
-    this.user = null;
-    this.authChange.next(false);
-    this.router.navigate(['/login']);
+    // signout user
+    this.firebaseAuth.signOut();
   }
 
   isAuth() {
-    return this.user != null;
-  }
-
-  getUser() {
-    return {...this.user};
-  }
-
-  private authSuccessful() {
-    this.authChange.next(true);
-    this.router.navigate(['/training']);
+    return this.isAuthenticated;
   }
 }

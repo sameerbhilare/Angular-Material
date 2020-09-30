@@ -10,12 +10,18 @@ import { TrainingService } from '../training.service';
 })
 export class NewTrainingComponent implements OnInit {
 
-  exercises: Exercise[] = [];
+  exercises: Exercise[];
 
   constructor(private trainingService: TrainingService) { }
 
   ngOnInit(): void {
-    this.exercises = this.trainingService.getAvailableExercises();
+    // listen to the fetched exercises events
+    this.trainingService.exercisesChanged.subscribe(exercises => {
+      this.exercises = exercises;
+    });
+
+    // fetch exercises
+    this.trainingService.fetchAvailableExercises();
   }
 
   onStartTraining(form: NgForm) {
