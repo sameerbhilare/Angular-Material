@@ -14,7 +14,12 @@ const routes: Routes = [
    related code and analyze whatever is in there and in there we got the training routing module with for
    child so we will still reached this route. */
   // lazy loaded routes
-  {path: 'training', loadChildren: () => import('./training/training.module').then(m => m.TrainingModule) }
+  {
+    path: 'training',
+    loadChildren: () => import('./training/training.module').then(m => m.TrainingModule),
+    // canLoad works like canActivate but it runs before the bundle is loaded.
+    canLoad: [ AuthGuard ]
+  }
 ];
 
 @NgModule({
