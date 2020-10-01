@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { AngularFirestore } from '@angular/fire/firestore';
 import { Observable, Subject, Subscription, Timestamp } from 'rxjs';
 import { map } from 'rxjs/operators';
+import { UIService } from '../shared/ui.service';
 import { Exercise } from './exercise.model';
 
 @Injectable()
@@ -24,9 +25,11 @@ export class TrainingService {
   // mange subscriptions to avoid errors on signout.
   firestoreSubscriptions: Subscription[] = [];
 
-  constructor(private firestoreDB: AngularFirestore) {}
+  constructor(private firestoreDB: AngularFirestore,
+              private uiService: UIService) {}
 
   fetchAvailableExercises() {
+    this.uiService.loadingStateChanged.next(true);
     this.firestoreSubscriptions.push(
       this.firestoreDB
         .collection('availableExercises')
@@ -34,6 +37,9 @@ export class TrainingService {
         .pipe(
           // we get an array of Firestore Documents
           map(documentArr => {
+            // to simulate error handling
+            // throw(new Error()); // uncomment this line to test failed case
+
             // convert the array of documents to array of Exercise objects
             return documentArr.map(document => {
               return {
@@ -48,6 +54,12 @@ export class TrainingService {
         .subscribe((exercises: Exercise[]) => {
           this.availableExercises = exercises;
           this.exercisesSubject.next([...this.availableExercises]); // emit event
+          this.uiService.loadingStateChanged.next(false);
+        }, error => {
+          this.availableExercises = null;
+          this.exercisesSubject.next(null); // emit event
+          this.uiService.loadingStateChanged.next(false);
+          this.uiService.showSnackBar('Unable to fetch available exercises. Please try again later.', null, 5000);
         })
     );
 
