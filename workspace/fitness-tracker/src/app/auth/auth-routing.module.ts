@@ -8,7 +8,7 @@ const routes: Routes = [
   {path: 'signup', component: SignupComponent},
 ];
 @NgModule({
-  imports: [ RouterModule.forChild(routes) ],
+  imports: [ RouterModule.forChild(routes) ], // eagerly loaded routes - because we need auth pages at the start
   exports: [ RouterModule ]
 })
 export class AuthRoutingModule {}
