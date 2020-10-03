@@ -1,0 +1,46 @@
+// 1. ==========================================================================
+// Improt angular material theming
+@import '~@angular/material/theming';
+
+// 2. ==========================================================================
+// It simply makes a lot of content available to us. For example some variables.
+// SAS knows the variables which define the angular material colors.
+// And a lot of other functionalities that are needed to successfully create a styling file in the end.
+@include mat-core();
+
+// 3. ==========================================================================
+// Define our colors and themes
+// mat-palette() nd $mat-* colors are from @angular/material/theming package.
+$candy-app-primary: mat-palette($mat-indigo);
+
+// we can add upto 3 shades of a color
+// A200 - default, A100 - lighter, A400-darker versions
+// These alternative shades will be picked by angular material for example for hover effects and so on.
+// If you don't define them all the effects will just take the default color.
+$candy-app-accent:  mat-palette($mat-pink, A200, A100, A400);
+
+// The warn palette is optional (defaults to red).
+$candy-app-warn:    mat-palette($mat-red);
+
+// 4. ==========================================================================
+// Create the theme object. A theme consists of configurations for individual
+// theming systems such as `color` or `typography`.
+// we can create a light themeb(mat-light-theme) or dark theme (mat-dark-theme)
+$candy-app-theme: mat-light-theme((
+  color: (
+    primary: $candy-app-primary,
+    accent: $candy-app-accent,
+    warn: $candy-app-warn,
+  )
+));
+
+
+// 5. ==========================================================================
+// Include theme styles for core and each component used in your app.
+// Alternatively, you can import and @include the theme mixins for each component
+// that you are using.
+@include angular-material-theme($candy-app-theme);
+
+
+// 6. ==========================================================================
+// Go to styles.css and comment the already included theme

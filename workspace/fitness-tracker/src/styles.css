@@ -1,6 +1,7 @@
 /* You can add global styles to this file, and also import other style files */
+/* bcs we are using custom theme my-theme.scss
 @import "~@angular/material/prebuilt-themes/indigo-pink.css";
-
+*/
 html, body {
   font-family: 'Roboto', sans-serif;
   height: 100%; /* so that entire body wil take 100% height even if the ocntent inside it doesn't require it */
