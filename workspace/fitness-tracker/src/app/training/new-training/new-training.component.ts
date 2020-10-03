@@ -1,8 +1,10 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { NgForm } from '@angular/forms';
-import { Subscription } from 'rxjs';
-import { UIService } from 'src/app/shared/ui.service';
+import { Store } from '@ngrx/store';
+import { Observable } from 'rxjs';
+import * as fromRoot from '../../app.reducer';
 import { Exercise } from '../exercise.model';
+import * as fromTraining from '../training.reducer';
 import { TrainingService } from '../training.service';
 
 @Component({
@@ -10,26 +12,18 @@ import { TrainingService } from '../training.service';
   templateUrl: './new-training.component.html',
   styleUrls: ['./new-training.component.css']
 })
-export class NewTrainingComponent implements OnInit, OnDestroy {
+export class NewTrainingComponent implements OnInit {
 
-  exercises: Exercise[];
-  isLoading: boolean = true;
-  loadingSub: Subscription;
-  exercisesChangedSub: Subscription;
+  exercises$: Observable<Exercise[]>;
+  isLoading$: Observable<boolean>;
 
   constructor(private trainingService: TrainingService,
-              private uiService: UIService) { }
+              private store: Store<fromTraining.State>) { }
 
   ngOnInit(): void {
 
-    this.loadingSub = this.uiService.loadingStateChanged.subscribe(
-      (isLoading) => (this.isLoading = isLoading)
-    );
-
-    // listen to the fetched exercises events
-    this.exercisesChangedSub = this.trainingService.exercisesChanged.subscribe(exercises => {
-      this.exercises = exercises;
-    });
+    this.isLoading$ = this.store.select(fromRoot.getIsLoading);
+    this.exercises$ = this.store.select(fromTraining.getAvailableExercise);
 
     // fetch exercises
     this.fetchExercises();
@@ -41,18 +35,6 @@ export class NewTrainingComponent implements OnInit, OnDestroy {
 
   onStartTraining(form: NgForm) {
     this.trainingService.startExercise(form.value.selectedExercise);
-  }
-
-  ngOnDestroy() {
-    // if for some reason this component is destroyed before the subscription is initialized
-    if (this.loadingSub) {
-      this.loadingSub.unsubscribe();
-    }
-
-    // if for some reason this component is destroyed before the subscription is initialized
-    if (this.exercisesChangedSub) {
-      this.exercisesChangedSub.unsubscribe();
-    }
   }
 
 }

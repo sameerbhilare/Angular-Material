@@ -1,35 +1,27 @@
 import { Injectable } from '@angular/core';
 import { AngularFirestore } from '@angular/fire/firestore';
-import { Observable, Subject, Subscription, Timestamp } from 'rxjs';
-import { map } from 'rxjs/operators';
-import { UIService } from '../shared/ui.service';
+import { Observable, Subject, Subscription } from 'rxjs';
+import { Store } from '@ngrx/store';
+import { map, take } from 'rxjs/operators';
 import { Exercise } from './exercise.model';
+import * as fromTraining from './training.reducer';
+import * as UI from '../shared/ui.actions';
+import * as Training from "./training.actions";
+import { UIService } from '../shared/ui.service';
 
 @Injectable()
 export class TrainingService {
-
-  // exerciseEmitter can emit data ONLY from this class
-  private exerciseSubject = new Subject<Exercise>();
-  // other classes which wnt to listen to changed exercise can listen to this public observable.
-  exerciseChanged: Observable<Exercise> = this.exerciseSubject.asObservable();
-  private runningExercise: Exercise;
-
-  private exercisesSubject = new Subject<Exercise[]>();
-  exercisesChanged: Observable<Exercise[]> = this.exercisesSubject.asObservable();
-  private availableExercises: Exercise[] = [];
-
-  // for completed and cancelled exercises
-  private finishedExercisesSubject = new Subject<Exercise[]>();
-  finishedExercisesChanged: Observable<Exercise[]> = this.finishedExercisesSubject.asObservable();
 
   // mange subscriptions to avoid errors on signout.
   firestoreSubscriptions: Subscription[] = [];
 
   constructor(private firestoreDB: AngularFirestore,
-              private uiService: UIService) {}
+              private uiService: UIService,
+              private store: Store<fromTraining.State>) {}
 
   fetchAvailableExercises() {
-    this.uiService.loadingStateChanged.next(true);
+    //this.uiService.loadingStateChanged.next(true);
+    this.store.dispatch(new UI.StartLoading());
     this.firestoreSubscriptions.push(
       this.firestoreDB
         .collection('availableExercises')
@@ -52,13 +44,12 @@ export class TrainingService {
             });
           }))
         .subscribe((exercises: Exercise[]) => {
-          this.availableExercises = exercises;
-          this.exercisesSubject.next([...this.availableExercises]); // emit event
-          this.uiService.loadingStateChanged.next(false);
+          this.store.dispatch(new Training.SetAvailableExercises(exercises));
+          this.store.dispatch(new UI.StopLoading());
         }, error => {
-          this.availableExercises = null;
-          this.exercisesSubject.next(null); // emit event
-          this.uiService.loadingStateChanged.next(false);
+          this.store.dispatch(new Training.SetAvailableExercises(null));
+
+          this.store.dispatch(new UI.StopLoading());
           this.uiService.showSnackBar('Unable to fetch available exercises. Please try again later.', null, 5000);
         })
     );
@@ -66,34 +57,35 @@ export class TrainingService {
   }
 
   startExercise(currentExerciseId: string) {
-    this.runningExercise = this.availableExercises.find(el => el.id === currentExerciseId);
-    this.exerciseSubject.next({...this.runningExercise}); // return a copy
-  }
-
-  getRunnigExercise() {
-    return {...this.runningExercise};
+    this.store.dispatch(new Training.StartActiveExercise(currentExerciseId));
   }
 
   completeExercise() {
-    this.addDataToDatabase({
-        ...this.runningExercise,
-        date: new Date(),
-        state: 'completed'
+    // take(1) because we only want one value, and not ongoing subscription
+    this.store.select(fromTraining.getActiveExercise).pipe(take(1)).subscribe(ex => {
+      this.addDataToDatabase({
+          ...ex,
+          date: new Date(),
+          state: 'completed'
+      });
+      this.store.dispatch(new Training.StopActiveExercise());
     });
-    this.runningExercise = null;
-    this.exerciseSubject.next(null);
+
   }
 
   cancelExercise(progress: number) {
-    this.addDataToDatabase({
-        ...this.runningExercise,
-        date: new Date(),
-        duration: this.runningExercise.duration * (progress / 100),
-        calories: this.runningExercise.calories * (progress / 100),
-        state: 'cancelled'
+    // take(1) because we only want one value, and not ongoing subscription
+    this.store.select(fromTraining.getActiveExercise).pipe(take(1)).subscribe(ex => {
+      this.addDataToDatabase({
+          ...ex,
+          date: new Date(),
+          duration: ex.duration * (progress / 100),
+          calories: ex.calories * (progress / 100),
+          state: 'cancelled'
+      });
+      this.store.dispatch(new Training.StopActiveExercise());
     });
-    this.runningExercise = null;
-    this.exerciseSubject.next(null);
+
   }
 
   addDataToDatabase(exercise: Exercise) {
@@ -111,7 +103,7 @@ export class TrainingService {
         .valueChanges()
         .subscribe((exercises: Exercise[]) => {
           //exercises.map(exercise => exercise.date = new Date((exercise.date).seconds*1000)) // this is not recognized by ts and gives compilation issues but works
-          this.finishedExercisesSubject.next(exercises);
+          this.store.dispatch(new Training.SetFinishedExercises(exercises));
         })
     );
   }

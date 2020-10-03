@@ -1,43 +1,33 @@
 import { Injectable } from '@angular/core';
-import { ActivatedRouteSnapshot, CanActivate, CanLoad, Route, Router, RouterStateSnapshot, UrlSegment, UrlTree } from '@angular/router';
+import { ActivatedRouteSnapshot, CanActivate, CanLoad, Route, RouterStateSnapshot, UrlSegment, UrlTree } from '@angular/router';
 import { Observable } from 'rxjs';
-import { AuthService } from './auth.service';
+import { Store } from "@ngrx/store";
+import * as fromRoot from '../app.reducer';
+import { take } from 'rxjs/operators';
 
 @Injectable()
 export class AuthGuard implements CanActivate, CanLoad {
 
-  constructor(private authService: AuthService,
-              private router: Router) {}
+  constructor(private store: Store<fromRoot.State>) {}
 
   /**
    * To guard our component from being loaded if user is not logged in.
+   * NOTE: Rediction in both cases (authenticated/unauthenticated)
+   *       is handled by the initializeAuthListener() in auth.service.
    *
    * @param route
    * @param segments
    */
   canLoad(route: Route, segments: UrlSegment[]): boolean | UrlTree | Observable<boolean | UrlTree> | Promise<boolean | UrlTree> {
-    if (this.authService.isAuth()) {
-      // user is logged in, so return false
-      return true;
-    } else {
-      // user is not logged in so redirect it to the login page
-      // we just cant return false, that won't work as intended. we must redirect the user to proper page.
-      this.router.navigate(['/login']);
-    }
+    // this observable runs forever but Guard runs only once hence we need to use take(1) operator
+    return this.store.select(fromRoot.getIsAuthenticated).pipe(take(1));
   }
 
   /* To guard our components from being used if user is not logged in.
    */
   canActivate(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): boolean | UrlTree | Observable<boolean | UrlTree> | Promise<boolean | UrlTree> {
-
-    if (this.authService.isAuth()) {
-      // user is logged in, so return false
-      return true;
-    } else {
-      // user is not logged in so redirect it to the login page
-      // we just cant return false, that won't work as intended. we must redirect the user to proper page.
-      this.router.navigate(['/login']);
-    }
+    // this observable runs forever but Guard runs only once hence we need to use take(1) operator
+    return this.store.select(fromRoot.getIsAuthenticated).pipe(take(1));
   }
 
 }

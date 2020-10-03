@@ -1,9 +1,10 @@
-import { AfterViewInit, Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, OnInit, ViewChild } from '@angular/core';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
-import { Subscription } from 'rxjs';
+import { Store } from "@ngrx/store";
 import { Exercise } from '../exercise.model';
+import * as fromTraining from '../training.reducer';
 import { TrainingService } from '../training.service';
 
 @Component({
@@ -11,11 +12,10 @@ import { TrainingService } from '../training.service';
   templateUrl: './past-trainings.component.html',
   styleUrls: ['./past-trainings.component.css']
 })
-export class PastTrainingsComponent implements OnInit, AfterViewInit, OnDestroy {
+export class PastTrainingsComponent implements OnInit, AfterViewInit {
 
   // columns to be displayed in given order
   displayedColumns = ['date', 'name', 'duration', 'calories', 'state'];
-  finishedExercisesSubscription: Subscription;
 
   /** Type of data source we expect to render.
    *  Note - we will receive an array of Exercise,
@@ -27,13 +27,13 @@ export class PastTrainingsComponent implements OnInit, AfterViewInit, OnDestroy 
   @ViewChild(MatSort) sort: MatSort;
   @ViewChild(MatPaginator) paginator: MatPaginator;
 
-  constructor(private trainingService: TrainingService) { }
+  constructor(private trainingService: TrainingService,
+              private store: Store<fromTraining.State>) { }
 
   ngOnInit(): void {
-    // listen to the finished exercises changes
-    this.finishedExercisesSubscription = this.trainingService.finishedExercisesChanged.subscribe(
-      exercises => this.dataSource.data = exercises
-    );
+    this.store
+      .select(fromTraining.getFinishedExercise)
+      .subscribe((exercises) => (this.dataSource.data = exercises));
 
     // fetch finished exercises
     this.trainingService.fetchCompletedOrCancelledExercises();
@@ -47,13 +47,6 @@ export class PastTrainingsComponent implements OnInit, AfterViewInit, OnDestroy 
 
   doFilter(filterValue: string) {
     this.dataSource.filter = filterValue.trim().toLowerCase();
-  }
-
-  ngOnDestroy() {
-    // if for some reason this component is destroyed before the subscription is initialized
-    if (this.finishedExercisesSubscription) {
-      this.finishedExercisesSubscription.unsubscribe();
-    }
   }
 
 }

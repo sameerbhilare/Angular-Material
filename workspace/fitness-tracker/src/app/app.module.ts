@@ -3,6 +3,7 @@ import { BrowserAnimationsModule } from "@angular/platform-browser/animations";
 import { NgModule } from '@angular/core';
 import { FlexLayoutModule } from '@angular/flex-layout';
 import { AngularFireModule } from "@angular/fire";
+import { StoreModule } from "@ngrx/store";
 
 import { AppComponent } from './app.component';
 import { MaterialModule } from "./material.module";
@@ -16,6 +17,7 @@ import { environment } from '../environments/environment';
 import { UIService } from './shared/ui.service';
 import { AuthModule } from './auth/auth.module';
 import { TrainingModule } from './training/training.module';
+import { reducers } from './app.reducer';
 
 
 @NgModule({
@@ -34,7 +36,9 @@ import { TrainingModule } from './training/training.module';
     AuthModule,
     TrainingModule,
     // initialize Angular Fire with our firebase data - General setup
-    AngularFireModule.initializeApp(environment.firebaseConfig)
+    AngularFireModule.initializeApp(environment.firebaseConfig),
+    // ngrx store
+    StoreModule.forRoot(reducers)
   ],
   providers: [ AuthService, TrainingService, UIService ],
   bootstrap: [AppComponent]
